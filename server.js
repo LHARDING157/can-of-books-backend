@@ -1,18 +1,45 @@
-'use strict';
-
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+require("dotenv").config();
+const PORT = process.env.PORT || 8082;
 const app = express();
 app.use(cors());
+const bp = require("body-parser");
+app.use(bp.json());
 
-const PORT = process.env.PORT || 3001;
+const Book = require("./models/book");
 
-app.get('/test', (request, response) => {
+mongoose.connect(process.env.DATABASE_URL);
 
-  response.send('test request received')
+app.get("/", (request, response) => {
+  response.json("You are on the root route of my cat app.");
+});
 
-})
+app.get("/books", async (request, response) => {
+  const books = await Book.find(request.query);
+  response.json(books);
+});
 
-app.listen(PORT, () => console.log(`listening on ${PORT}`));
+// POST = CREATE
+app.post("/books", async (request, response) => {
+  const newBook = await Book.create(request.body);
+  response.json(newBook);
+});
+
+// DELETE = DELETE
+app.delete("/books/:id", async (request, response) => {
+  const deleteBook = await Book.findByIdAndDelete(request.params.id);
+  response.json(deleteBook);
+});
+
+//PUT = UPDATE
+app.put("/books/:id", async (request, response) => {
+  const updateBook = await Book.findByIdAndUpdate(
+    request.params.id,
+    request.body
+  );
+  response.json(updateBook);
+});
+
+app.listen(PORT, () => console.log(`App is listening on port ${PORT}`));
